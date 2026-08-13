@@ -61,12 +61,22 @@ export default function CreateAccountPanel({ setAccountCreated }: CreateAccountP
 
           setAccountCreated("");
 
-          if (errorCode === "auth/email-already-in-use") {
-            setErrors((prev) => ({
-              ...prev,
-              ["otherError"]: "Email already in use!",
-            }));
-          }
+          const authMessages: Record<string, string> = {
+            "auth/email-already-in-use": "Email already in use!",
+            "auth/invalid-email": "Please enter a valid email address.",
+            "auth/operation-not-allowed":
+              "Email/password account creation is not enabled in Firebase.",
+            "auth/unauthorized-domain":
+              "This Vercel address is not authorized in Firebase.",
+            "auth/weak-password": "Password must be at least six characters.",
+          };
+
+          setErrors((prev) => ({
+            ...prev,
+            otherError:
+              authMessages[errorCode] ??
+              `Firebase could not create the account (${errorCode}).`,
+          }));
 
           reject(new Error(errorCode));
         });
@@ -86,7 +96,7 @@ export default function CreateAccountPanel({ setAccountCreated }: CreateAccountP
           .then((result) => {
             if (result.success) {
               sendEmailVerification(userCredential.user, {
-                url: "https://ucsd-health-gamified-website.vercel.app/auth",
+                url: `${window.location.origin}/auth`,
                 handleCodeInApp: true,
               })
                 .then(() => {
