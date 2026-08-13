@@ -20,6 +20,10 @@ app.get("/ping", (req, res) => {
   res.status(200).send("pong");
 });
 
-app.listen(port, () => {
-  console.log(`Backend running at http://localhost:${port}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(port, () => {
+    console.log(`Backend running at http://localhost:${port}`);
+  });
+}
+
+export default app;
