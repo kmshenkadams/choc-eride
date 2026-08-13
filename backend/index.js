@@ -9,16 +9,24 @@ import { connectMongo } from "./util/db.js";
 const app = express();
 const port = process.env.PORT || 5001;
 
-connectMongo();
-
 app.use(express.json());
 app.use(cors());
-
-app.use("/api/user", userRoutes);
 
 app.get("/ping", (req, res) => {
   res.status(200).send("pong");
 });
+
+app.use("/api/user", async (req, res, next) => {
+  try {
+    await connectMongo();
+    next();
+  } catch (err) {
+    console.error("MongoDB unavailable:", err.message);
+    res.status(503).json({ error: "Database unavailable" });
+  }
+});
+
+app.use("/api/user", userRoutes);
 
 if (!process.env.VERCEL) {
   app.listen(port, () => {
