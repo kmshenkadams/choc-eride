@@ -1,5 +1,5 @@
 import { User } from "../models/user.js";
-import admin from "../util/firebaseAdmin.js";
+import { getFirebaseAdmin } from "../util/firebaseAdmin.js";
 
 export const requireSignedIn = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -9,6 +9,7 @@ export const requireSignedIn = async (req, res, next) => {
   }
 
   try {
+    const admin = getFirebaseAdmin();
     const decodedToken = await admin.auth().verifyIdToken(token);
     req.userUid = decodedToken.uid;
     req.userEmail = decodedToken.email;
