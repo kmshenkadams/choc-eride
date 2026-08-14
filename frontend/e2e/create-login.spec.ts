@@ -12,8 +12,8 @@ test("create a new login with Test as the last name", async ({ page }, testInfo)
 
   await page.goto("/signup/");
 
-  await page.getByPlaceholder("Jane").fill(process.env.E2E_TEST_FIRST_NAME ?? "Automated");
-  await page.getByPlaceholder("Doe").fill("Test");
+  await page.getByPlaceholder("Jane", { exact: true }).fill(process.env.E2E_TEST_FIRST_NAME ?? "Automated");
+  await page.getByPlaceholder("Doe", { exact: true }).fill("Test");
   await page.locator('input[name="username"]').fill(email);
   await page.locator('input[name="password"]').fill(password);
 
