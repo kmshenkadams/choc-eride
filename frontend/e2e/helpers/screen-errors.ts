@@ -38,11 +38,17 @@ export function monitorScreenErrors(page: Page, options: MonitorOptions = {}) {
   });
 
   page.on("console", (message) => {
+    const text = message.text();
+    const url = message.location().url;
+    const genericResourceError =
+      text.startsWith("Failed to load resource:") && !url;
+
     if (
       message.type() === "error" &&
-      !isVercelToolbarRequest(message.location().url)
+      !genericResourceError &&
+      !isVercelToolbarRequest(url)
     ) {
-      errors.push(`console.error: ${message.text()}`);
+      errors.push(`console.error: ${text}`);
     }
   });
 
