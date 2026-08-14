@@ -1,4 +1,4 @@
-import { expect, Page, TestInfo } from "@playwright/test";
+import { expect, Locator, Page, TestInfo } from "@playwright/test";
 
 type MonitorOptions = {
   allowResponse?: (url: string, status: number) => boolean;
@@ -14,6 +14,20 @@ function isVercelToolbarRequest(url: string): boolean {
   } catch {
     return false;
   }
+}
+
+export async function fillSecret(locator: Locator, value: string) {
+  await locator.evaluate((element, secret) => {
+    const input = element as HTMLInputElement;
+    const setter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )?.set;
+
+    setter?.call(input, secret);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }, value);
 }
 
 export function monitorScreenErrors(page: Page, options: MonitorOptions = {}) {
