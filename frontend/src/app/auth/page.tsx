@@ -6,15 +6,11 @@ import { useEffect, useRef, useState } from "react";
 
 import { LoginButton } from "../components/LoginButton";
 import WelcomePanel from "../components/WelcomePanel/WelcomePanel";
-// import { useAuth } from "../contexts/AuthContext";
 import { auth } from "../firebase-config.js";
 
 import styles from "./Auth.module.css";
 
 export default function Auth() {
-  // Example usage of useAuth
-  // const { currentUser } = useAuth();
-
   const router = useRouter();
   const searchParams = useSearchParams();
   const actionExecuted = useRef(false);
@@ -27,7 +23,6 @@ export default function Auth() {
     window.location.href = "/signin";
   };
 
-  // Handle Enter key press when there's an error
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "Enter" && hasError) {
       event.preventDefault();
@@ -44,38 +39,35 @@ export default function Auth() {
         setTimeout(res, 250);
       });
 
-      let mode =
-        searchParams.get("mode") ?? new URLSearchParams(window.location.search).get("mode");
+      const urlParams = new URLSearchParams(window.location.search);
+      const mode = searchParams.get("mode") ?? urlParams.get("mode");
+      const oobCode = searchParams.get("oobCode") ?? urlParams.get("oobCode");
 
-      let oobCode =
-        searchParams.get("oobCode") ?? new URLSearchParams(window.location.search).get("oobCode");
-
-      if (!mode || !oobCode) {
-        const urlParams = new URLSearchParams(window.location.search);
-        mode = mode ?? urlParams.get("mode");
-        oobCode = oobCode ?? urlParams.get("oobCode");
+      // Firebase can consume the verification code before returning to the
+      // configured continuation URL. In that flow, /auth has no query string.
+      if (!mode && !oobCode) {
+        router.replace("/emailverified");
+        return;
       }
 
       if (!oobCode) {
         setTitleMessage("Error Authenticating");
-        setMessage("");
+        setMessage("The verification link is incomplete. Please request a new email.");
+        setHasError(true);
         return;
       }
 
       switch (mode) {
         case "resetPassword":
-          actionExecuted.current = true;
           router.replace(`/resetpassword?oobCode=${oobCode}`);
           break;
         case "verifyEmail":
-          actionExecuted.current = true;
-
           setTitleMessage("Verifying Email...");
           setMessage("");
 
           applyActionCode(auth, oobCode)
             .then(() => {
-              router.push("/emailverified");
+              router.replace("/emailverified");
             })
             .catch((error) => {
               const code = (error as { code?: string })?.code ?? "unknown";
@@ -94,12 +86,13 @@ export default function Auth() {
           break;
         default:
           setTitleMessage("Error Authenticating");
-          setMessage("");
+          setMessage("The verification link is not supported.");
+          setHasError(true);
       }
     };
 
     void run();
-  }, [searchParams]);
+  }, [router, searchParams]);
 
   return (
     <main className={styles.container} onKeyDown={handleKeyDown}>
