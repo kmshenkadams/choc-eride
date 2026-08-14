@@ -4,6 +4,18 @@ type MonitorOptions = {
   allowResponse?: (url: string, status: number) => boolean;
 };
 
+function isVercelToolbarRequest(url: string): boolean {
+  try {
+    const { pathname } = new URL(url);
+    return (
+      pathname.startsWith("/.well-known/vercel/") ||
+      /^\/[a-f0-9]{12,}\/script\.js$/i.test(pathname)
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function monitorScreenErrors(page: Page, options: MonitorOptions = {}) {
   const errors: string[] = [];
 
@@ -12,20 +24,32 @@ export function monitorScreenErrors(page: Page, options: MonitorOptions = {}) {
   });
 
   page.on("console", (message) => {
-    if (message.type() === "error") {
+    if (
+      message.type() === "error" &&
+      !isVercelToolbarRequest(message.location().url)
+    ) {
       errors.push(`console.error: ${message.text()}`);
     }
   });
 
   page.on("requestfailed", (request) => {
+    const failure = request.failure()?.errorText ?? "unknown";
+    if (
+      failure.includes("ERR_ABORTED") ||
+      isVercelToolbarRequest(request.url())
+    ) {
+      return;
+    }
+
     errors.push(
-      `Request failed: ${request.method()} ${request.url()} - ${request.failure()?.errorText ?? "unknown"}`,
+      `Request failed: ${request.method()} ${request.url()} - ${failure}`,
     );
   });
 
   page.on("response", (response) => {
     if (
       response.status() >= 400 &&
+      !isVercelToolbarRequest(response.url()) &&
       !options.allowResponse?.(response.url(), response.status())
     ) {
       errors.push(
