@@ -16,12 +16,13 @@ export default function VerifyEmail({ email }: VerifyEmailProps) {
   const [verificationError, setVerificationError] = useState("");
   const [emailResent, setEmailResent] = useState("");
 
-  const resendEmail = () => {
+  const resendEmail = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
     const user = auth.currentUser;
 
     if (user) {
       sendEmailVerification(user, {
-        url: "https://ucsd-health-gamified-website.vercel.app/auth",
+        url: `${window.location.origin}/auth`,
         handleCodeInApp: true,
       })
         .then(() => {
@@ -36,15 +37,16 @@ export default function VerifyEmail({ email }: VerifyEmailProps) {
           const firebaseError = error as { code?: string; message: string };
           const errorCode = firebaseError.code ?? "unknown_error";
 
-          if (errorCode === "auth/too-many-requests") {
-            setEmailResent("");
-            setVerificationError("Too many requests. Please try again in 1-2 minutes.");
-          }
+          setEmailResent("");
+          setVerificationError(
+            errorCode === "auth/too-many-requests"
+              ? "Too many requests. Please try again in 1-2 minutes."
+              : `Unable to resend the verification email (${errorCode}).`,
+          );
         });
     } else {
-      if (process.env.NODE_ENV !== "production") {
-        console.error("No user found.");
-      }
+      setEmailResent("");
+      setVerificationError("Please sign in again before requesting another verification email.");
     }
   };
 
