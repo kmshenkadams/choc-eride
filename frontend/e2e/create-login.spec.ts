@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { monitorScreenErrors, requiredEnv } from "./helpers/screen-errors";
+import { fillSecret, monitorScreenErrors, requiredEnv } from "./helpers/screen-errors";
 
 test("create a new login with Test as the last name", async ({ page }, testInfo) => {
   const email = requiredEnv("E2E_NEW_USER_EMAIL");
@@ -15,7 +15,7 @@ test("create a new login with Test as the last name", async ({ page }, testInfo)
   await page.getByPlaceholder("Jane", { exact: true }).fill(process.env.E2E_TEST_FIRST_NAME ?? "Automated");
   await page.getByPlaceholder("Doe", { exact: true }).fill("Test");
   await page.locator('input[name="username"]').fill(email);
-  await page.locator('input[name="password"]').fill(password);
+  await fillSecret(page.locator('input[name="password"]'), password);
 
   await page.getByRole("button", { name: "Sign Up" }).click();
 
