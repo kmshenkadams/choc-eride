@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+/test-results
+/playwright-report
+/playwright/.auth
 
 # next.js
 /.next/
@@ -29,8 +32,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env
+.env.e2e
 
 # vercel
 .vercel
