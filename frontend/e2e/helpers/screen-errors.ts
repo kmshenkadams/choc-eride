@@ -19,6 +19,9 @@ function isVercelToolbarRequest(url: string): boolean {
 export async function fillSecret(locator: Locator, value: string) {
   await locator.evaluate((element, secret) => {
     const input = element as HTMLInputElement;
+    // This native setter keeps React state in sync without exposing the secret
+    // in Playwright's human-readable action title.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     const setter = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
       "value",
