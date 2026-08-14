@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-import { monitorScreenErrors, requiredEnv } from "./helpers/screen-errors";
+import { fillSecret, monitorScreenErrors, requiredEnv } from "./helpers/screen-errors";
 
 test("login with a verified test account", async ({ page }, testInfo) => {
   const email = requiredEnv("E2E_TEST_EMAIL");
@@ -12,7 +12,7 @@ test("login with a verified test account", async ({ page }, testInfo) => {
 
   await page.goto("/signin/");
   await page.locator('input[name="username"]').fill(email);
-  await page.locator('input[name="password"]').fill(password);
+  await fillSecret(page.locator('input[name="password"]'), password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await expect(page).toHaveURL(/\/(intro-video\/?)?$/, { timeout: 30_000 });
