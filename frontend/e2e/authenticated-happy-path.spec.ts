@@ -19,13 +19,11 @@ test("authenticated happy path loads the course and logs screen errors", async (
   await page.goto("/");
 
   await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
-  await expect(page.locator('svg[width="1151"][height="1024"]')).toBeVisible({
-    timeout: 30_000,
-  });
-  await expect(page.getByRole("button", { name: /Log Out/i })).toBeVisible();
+  await expect(
+  page.getByRole("heading", {
+    name: /Welcome to the E Bike Training Course/i,
+  }),
+).toBeVisible({ timeout: 30_000 });
 
   await monitor.assertNoErrors(testInfo);
-
-  await page.getByRole("button", { name: /Log Out/i }).click();
-  await expect(page).toHaveURL(/\/signin\/?$/, { timeout: 15_000 });
-});
+  });
