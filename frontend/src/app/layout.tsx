@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import localFont from "next/font/local";
 
 import { AuthProvider } from "./contexts/AuthContext";
@@ -34,6 +35,7 @@ export default function RootLayout({
         <AuthProvider>
           <ToastProvider />
           {children}
+          <Analytics />
         </AuthProvider>
       </body>
     </html>

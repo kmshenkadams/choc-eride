@@ -4,15 +4,28 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const uri = process.env.MONGODB_URI;
+let connectionPromise;
 
-export async function connectMongo() {
-  try {
-    await mongoose.connect(uri);
-  } catch (err) {
-    console.error("Error connecting to MongoDB:", err);
-    process.exit(1);
+export function connectMongo() {
+  if (mongoose.connection.readyState === 1) {
+    return Promise.resolve(mongoose);
   }
+
+  if (!connectionPromise) {
+    const uri = process.env.MONGODB_URI;
+
+    if (!uri) {
+      return Promise.reject(new Error("MONGODB_URI is not configured"));
+    }
+
+    connectionPromise = mongoose.connect(uri).catch((err) => {
+      connectionPromise = undefined;
+      console.error("MongoDB connection failed:", err.message);
+      throw err;
+    });
+  }
+
+  return connectionPromise;
 }
 
 export default mongoose;

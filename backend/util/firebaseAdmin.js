@@ -2,13 +2,27 @@ import { readFileSync } from "fs";
 
 import admin from "firebase-admin";
 
-if (!admin.apps.length) {
-  const raw = readFileSync("/etc/secrets/firebase-service-account.json", "utf8");
-  const serviceAccount = JSON.parse(raw);
+const getServiceAccount = () => {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  }
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
-}
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    const raw = readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS, "utf8");
+    return JSON.parse(raw);
+  }
 
-export default admin;
+  throw new Error(
+    "Firebase Admin credentials are not configured. Set FIREBASE_SERVICE_ACCOUNT_JSON.",
+  );
+};
+
+export const getFirebaseAdmin = () => {
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(getServiceAccount()),
+    });
+  }
+
+  return admin;
+};
