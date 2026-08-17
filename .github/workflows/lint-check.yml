@@ -24,4 +24,4 @@ jobs:
       - working-directory: frontend # Change this to the name of your frontend directory
         run: |
           npm ci
-          npm run lint-check
+          npx eslint --cache --report-unused-disable-directives .
