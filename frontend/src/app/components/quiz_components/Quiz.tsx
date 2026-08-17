@@ -17,22 +17,16 @@ import { Question } from "./Question";
 import styles from "./Quiz.module.css";
 import { Submit } from "./Submit";
 import { SubmitNotif } from "./SubmitNotif";
+import { calculateQuizScore, getNextModule } from "./quizLogic";
 
-export type Question = {
-  question: string;
-  subQuestion?: string; // for "subcaptions" (particularly quiz 7)
-  image?: string;
-  imageW?: number;
-  imageH?: number;
-  options: string[];
-  correctAnswer: string | string[];
-  type: "single" | "multiple";
-};
+import type { Question as QuizQuestion } from "./quizLogic";
+
+export type { Question } from "./quizLogic";
 
 type QuizProps = {
   title: string;
   description: string;
-  questions: Question[];
+  questions: QuizQuestion[];
   module: number;
   randomized?: boolean;
 };
@@ -46,9 +40,9 @@ function shuffleArray<T>(array: T[]): T[] {
   return newArray;
 }
 
-function shuffleQuestions(questions: Question[]): Question[] {
+function shuffleQuestions(questions: QuizQuestion[]): QuizQuestion[] {
   return shuffleArray(
-    questions.map((q: Question) => {
+    questions.map((q: QuizQuestion) => {
       const letters = ["A.", "B.", "C.", "D.", "E.", "F.", "G.", "H."];
       const shuffledOptions = shuffleArray(q.options);
 
@@ -100,7 +94,7 @@ export const Quiz = ({
   const [label, setLabel] = useState<string>("Next Module");
   const [quizTitle, setTitle] = useState<string>(title);
   const [score, setScore] = useState<number>(0);
-  const [randomizedQuestions, setRandomizedQuestions] = useState<Question[]>(originalQuestions);
+  const [randomizedQuestions, setRandomizedQuestions] = useState<QuizQuestion[]>(originalQuestions);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -184,20 +178,7 @@ export const Quiz = ({
   };
 
   const handleSubmit = async () => {
-    let correctCount = 0;
-    for (const [index, answers] of Object.entries(selectedAnswers)) {
-      const question = randomizedQuestions[Number(index)];
-      if (question.type === "multiple") {
-        const isCorrect =
-          answers.length === question.correctAnswer.length &&
-          answers.every((a) => question.correctAnswer.includes(a));
-        if (isCorrect) correctCount++;
-      } else {
-        if (answers[0] === question.correctAnswer) correctCount++;
-      }
-    }
-
-    const calculatedScore = (correctCount / randomizedQuestions.length) * 100;
+    const calculatedScore = calculateQuizScore(randomizedQuestions, selectedAnswers);
 
     // Update module immediately if score is >= 75
     if (calculatedScore >= 75 && currentUser) {
@@ -205,7 +186,7 @@ export const Quiz = ({
         if (module < currentUser.module) {
           // Quiz module is behind user's current progress - no update needed
         } else if (module === currentUser.module) {
-          const nextModule = Math.min(currentUser.module + 1, 10);
+          const nextModule = getNextModule(currentUser.module);
           const token = await auth.currentUser?.getIdToken();
           const headers: Record<string, string> | undefined = token
             ? { Authorization: `Bearer ${token}` }
