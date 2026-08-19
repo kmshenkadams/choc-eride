@@ -1,36 +1,38 @@
-import "dotenv/config";
+import { pathToFileURL } from "node:url";
 
-import cors from "cors";
 import express from "express";
-
-import userRoutes from "./routes/user.js";
-import { connectMongo } from "./util/db.js";
 
 const app = express();
 const port = process.env.PORT || 5001;
 
-app.use(express.json());
-app.use(cors());
-
-app.get("/ping", (req, res) => {
-  res.status(200).send("pong");
+const serviceStatus = Object.freeze({
+  status: "ok",
+  service: "eride-backend",
+  learnerAccountDataService: "retired",
 });
 
-app.use("/api/user", async (req, res, next) => {
-  try {
-    await connectMongo();
-    next();
-  } catch (err) {
-    console.error("MongoDB unavailable:", err.message);
-    res.status(503).json({ error: "Database unavailable" });
-  }
+const retiredLearnerAccountDataResponse = Object.freeze({
+  status: "gone",
+  message: "The server-side learner account and data service has been retired.",
 });
 
-app.use("/api/user", userRoutes);
+app.get(["/", "/health", "/ping"], (req, res) => {
+  res.status(200).json(serviceStatus);
+});
 
-if (!process.env.VERCEL) {
+app.all(["/api/user", "/api/user/*"], (req, res) => {
+  res.status(410).json(retiredLearnerAccountDataResponse);
+});
+
+app.use((req, res) => {
+  res.status(404).json({ error: "Not found" });
+});
+
+const isDirectRun = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (!process.env.VERCEL && isDirectRun) {
   app.listen(port, () => {
-    console.log(`Backend running at http://localhost:${port}`);
+    console.log("Backend running at http://localhost:" + port);
   });
 }
 

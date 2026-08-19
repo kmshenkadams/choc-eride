@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+serviceAccountKey.json
 
 # debug
 npm-debug.log*
@@ -41,5 +42,3 @@ node_modules/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-serviceAccountKey.json

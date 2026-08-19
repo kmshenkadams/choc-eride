@@ -1,12 +1,13 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Minimal status service for the retired eRide server-side learner account and data system",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test",
+    "check": "node --check index.js && node --test",
     "check-git-hooks": "cd .. && node .secret-scan/secret-scan.js -- --check-git-hooks",
     "format": "npm run check-git-hooks && prettier --write .",
     "lint-fix": "npm run check-git-hooks && (eslint --fix --cache --report-unused-disable-directives . || true) && prettier --write .",
@@ -17,18 +18,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "express-validator": "^7.2.1",
-    "firebase-admin": "^13.4.0",
-    "math-intrinsics": "^1.1.0",
-    "mongodb": "^6.12.0",
-    "mongoose": "^8.13.0"
+    "express": "^4.21.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
-    "@types/express-validator": "^3.0.2",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.31.0",
