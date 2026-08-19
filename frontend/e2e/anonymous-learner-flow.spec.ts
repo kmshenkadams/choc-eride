@@ -11,7 +11,7 @@ type StoredProgress = {
 };
 
 const forbiddenRequestPattern =
-  /\/api\/user|identitytoolkit|securetoken|firebaseinstallations|firebaseio|firebaseapp/i;
+  /\/api\/user|identitytoolkit|securetoken|firebaseinstallations|firebaseio|firebaseapp|\/_vercel\/insights\/script\.js|va\.vercel-scripts\.com\/v1\/script\.js/i;
 
 function monitorLearnerRequests(page: Page): string[] {
   const forbiddenRequests: string[] = [];
@@ -121,6 +121,9 @@ test.describe("connected anonymous learner journey", () => {
     await seedProgress(page, 8);
 
     await page.goto("/module8");
+    await expect(
+      page.locator('iframe[src="https://www.youtube.com/embed/vFmCdl2ASNQ?si=7R3W6hCGWoT9_a2_"]'),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Start Quiz" }).click();
 
     await expect(page).toHaveURL(/\/final-test\/?$/);
