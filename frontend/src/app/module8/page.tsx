@@ -3,53 +3,22 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-import { put } from "../api/requests";
 import ModuleIntro from "../components/AllModules/ModuleIntro/ModuleIntro";
 import ClosingVideo from "../components/Module8Components/ClosingVideo/ClosingVideo";
 import ModuleGate from "../components/ModuleGate/ModuleGate";
 import ModuleSliderContainer from "../components/ModuleSliderContainer/ModuleSliderContainer";
 import Sidebar from "../components/Sidebar/Sidebar";
 import { TitleScreen } from "../components/quiz_components/TitleScreen";
-import { useAuth } from "../contexts/AuthContext";
-import { auth } from "../firebase-config";
-import { showErrorToast } from "../utils/toastUtils";
+import { useLearningProgress } from "../contexts/LearningProgressContext";
 
 import styles from "./mod8.module.css";
 
 export default function Module8() {
   const router = useRouter();
-  const { currentUser, refreshUser } = useAuth();
+  const { advanceTo } = useLearningProgress();
 
-  const handleStart = async () => {
-    // Update module progress if user is at module 8
-    if (currentUser) {
-      try {
-        const currentModule = 8; // This is module 8
-
-        if (currentModule < currentUser.module) {
-          // Module 8 is behind user's current progress - no update needed
-        } else if (currentModule === currentUser.module) {
-          const nextModule = Math.min(currentUser.module + 1, 10);
-          const token = await auth.currentUser?.getIdToken();
-          const headers: Record<string, string> | undefined = token
-            ? { Authorization: `Bearer ${token}` }
-            : undefined;
-          await put(`/api/user/update/${currentUser.email}`, { module: nextModule }, headers);
-
-          // Refresh the user data in the context
-          await refreshUser();
-        } else {
-          showErrorToast("You're trying to skip ahead to a locked module.");
-        }
-      } catch (error) {
-        showErrorToast("Failed to update your progress. Please try again.");
-        if (process.env.NODE_ENV !== "production") {
-          console.error("Failed to update module:", error);
-        }
-      }
-    }
-
-    // Navigate to final test
+  const handleStart = () => {
+    advanceTo(9);
     router.push("/final-test");
   };
 

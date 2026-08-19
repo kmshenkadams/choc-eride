@@ -3,13 +3,10 @@
 import { useRouter } from "next/navigation";
 import React, { CSSProperties, useEffect, useRef, useState } from "react";
 
-import { put } from "../api/requests";
 import ModuleGate from "../components/ModuleGate/ModuleGate";
 import TypingAnimation from "../components/TypingAnimation/TypingAnimation";
 import buttonStyles from "../components/VideoButton.module.css";
-import { useAuth } from "../contexts/AuthContext";
-import { auth } from "../firebase-config";
-import { showErrorToast } from "../utils/toastUtils";
+import { useLearningProgress } from "../contexts/LearningProgressContext";
 
 import styles from "./IntroVideo.module.css";
 
@@ -18,29 +15,14 @@ export default function IntroVideo() {
   const [startTyping, setStartTyping] = useState(false);
   const typeAnimationRef = useRef(null);
   const router = useRouter();
-  const { currentUser } = useAuth();
+  const { markIntroSeen } = useLearningProgress();
 
-  const handleSubmit = async (e?: React.MouseEvent<HTMLButtonElement>) => {
-    if (e) e.preventDefault();
-    // Redirect to the video page
-    if (textLoaded) {
-      try {
-        const token = await auth.currentUser?.getIdToken();
-        const headers: Record<string, string> | undefined = token
-          ? { Authorization: `Bearer ${token}` }
-          : undefined;
-        if (!currentUser) {
-          throw new Error("User not found");
-        }
-        await put(`/api/user/update/${currentUser.email}`, { firstLogin: false }, headers);
+  const handleSubmit = (event?: React.MouseEvent<HTMLButtonElement>) => {
+    event?.preventDefault();
+    if (!textLoaded) return;
 
-        router.push("/");
-      } catch (error) {
-        showErrorToast();
-      }
-    } else {
-      // Text not loaded yet
-    }
+    markIntroSeen();
+    router.push("/");
   };
 
   useEffect(() => {
@@ -115,9 +97,8 @@ export default function IntroVideo() {
               }
               id={styles.video_intro_button}
               className={`${buttonStyles.start_button}  ${textLoaded ? buttonStyles.buttonFinal : buttonStyles.buttonInitial}`}
-              onClick={(e) => {
-                void handleSubmit(e);
-              }}
+              disabled={!textLoaded}
+              onClick={handleSubmit}
             >
               <p className={buttonStyles.buttonText}>Let&apos;s get started!</p>
               {/* prettier-ignore */}

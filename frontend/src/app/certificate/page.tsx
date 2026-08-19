@@ -1,14 +1,12 @@
 "use client";
-import { onAuthStateChanged } from "firebase/auth";
+
 import { toPng } from "html-to-image";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
-import { getUser } from "../api/user";
 import Certificate from "../components/Certificate/Certificate";
 import ModuleGate from "../components/ModuleGate/ModuleGate";
 import Sidebar from "../components/Sidebar/Sidebar";
-import { auth } from "../firebase-config.js";
 import { showErrorToast } from "../utils/toastUtils";
 
 import styles from "./CertificatePage.module.css";
@@ -16,11 +14,11 @@ import styles from "./CertificatePage.module.css";
 export default function CertificatePage() {
   const certificateRef = useRef<HTMLDivElement>(null);
   const [name, setName] = useState("");
-  const [certificateReady, setCertificateReady] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(true);
+  const certificateName = name.trim();
+  const certificateReady = certificateName.length > 0;
 
   const handleDownloadPDF = () => {
-    if (!certificateReady || !name || !certificateRef.current) {
+    if (!certificateReady || !certificateRef.current) {
       showErrorToast();
       return;
     }
@@ -41,48 +39,12 @@ export default function CertificatePage() {
   };
 
   const handlePrint = () => {
-    if (!certificateReady || !name) {
+    if (!certificateReady) {
       showErrorToast();
       return;
     }
     window.print();
   };
-
-  useEffect(() => {
-    const getName = onAuthStateChanged(auth, (user) => {
-      if (user?.email) {
-        setIsVerifying(true);
-        setCertificateReady(false);
-
-        getUser(user.email)
-          .then((result) => {
-            if (result.success && result.data.name && result.data.module >= 10) {
-              setName(result.data.name);
-              setCertificateReady(true);
-            } else {
-              setCertificateReady(false);
-            }
-          })
-          .catch((err) => {
-            if (process.env.NODE_ENV !== "production") {
-              console.error("Error fetching user from MongoDB:", err);
-            }
-            showErrorToast();
-            setCertificateReady(false);
-          })
-          .finally(() => {
-            setIsVerifying(false);
-          });
-      } else {
-        setIsVerifying(false);
-        setCertificateReady(false);
-      }
-    });
-
-    return () => {
-      getName();
-    };
-  }, []);
 
   return (
     <ModuleGate module={10}>
@@ -91,79 +53,86 @@ export default function CertificatePage() {
           <Sidebar currentlyOn={9} />
         </div>
         <div className={styles.content}>
-          {(isVerifying || !certificateReady) && (
-            <div
-              style={{
-                backgroundColor: "white",
-                height: "100vh",
-                width: "100%",
-              }}
-            ></div>
-          )}
+          <div className={styles.congratsStarsWrapper}>
+            <div className={styles.congratsWrapper}>
+              <div className={styles.row}>
+                <Image
+                  src="/certificate/star1.svg"
+                  alt="Star"
+                  width={35}
+                  height={35}
+                  className={styles.star1}
+                />
 
-          {!isVerifying && certificateReady && (
-            <div className={styles.congratsStarsWrapper}>
-              <div className={styles.congratsWrapper}>
-                <div className={styles.row}>
-                  <Image
-                    src="/certificate/star1.svg"
-                    alt="Star"
-                    width={35}
-                    height={35}
-                    className={styles.star1}
-                  />
+                <p className={styles.congrats}>
+                  Congratulations! You&apos;ve officially completed the E Bike safety course!
+                </p>
 
-                  <p className={styles.congrats}>
-                    Congratulations! You&apos;ve officially completed the E Bike safety course!
-                  </p>
+                <Image
+                  src="/certificate/star2.svg"
+                  alt="Star"
+                  width={32}
+                  height={32}
+                  className={styles.star2}
+                />
 
-                  <Image
-                    src="/certificate/star2.svg"
-                    alt="Star"
-                    width={32}
-                    height={32}
-                    className={styles.star2}
-                  />
+                <Image
+                  src="/certificate/star3.svg"
+                  alt="Star"
+                  width={50}
+                  height={50}
+                  className={styles.star3}
+                />
+              </div>
 
-                  <Image
-                    src="/certificate/star3.svg"
-                    alt="Star"
-                    width={50}
-                    height={50}
-                    className={styles.star3}
-                  />
-                </div>
-
-                <div className={styles.certificateWrapper}>
-                  <div className={styles.certificate}>
-                    <Certificate name={name} certificateRef={certificateRef} />
-                  </div>
-
-                  <div className={styles.icons}>
-                    <button
-                      className={styles.button}
-                      onClick={handlePrint}
-                      disabled={!certificateReady}
-                    >
-                      <Image src="/certificate/print.svg" alt="Print" width={24} height={24} />
-                    </button>
-
-                    <button
-                      className={styles.button}
-                      onClick={handleDownloadPDF}
-                      disabled={!certificateReady}
-                    >
-                      <Image src="/certificate/download.svg" alt="Save" width={24} height={24} />
-                    </button>
-                  </div>
-                </div>
-
-                <p className={styles.printInstruction}>
-                  Be sure to print and save this certificate for school purposes.
+              <div className={styles.nameEntry}>
+                <label htmlFor="certificate-name" className={styles.nameLabel}>
+                  Name for your certificate
+                </label>
+                <input
+                  id="certificate-name"
+                  className={styles.nameInput}
+                  value={name}
+                  onChange={(event) => {
+                    setName(event.target.value);
+                  }}
+                  autoComplete="off"
+                  maxLength={100}
+                />
+                <p className={styles.namePrivacy}>
+                  This name stays on this page and is not saved or sent anywhere.
                 </p>
               </div>
+
+              <div className={styles.certificateWrapper}>
+                <div className={styles.certificate}>
+                  <Certificate name={certificateName} certificateRef={certificateRef} />
+                </div>
+
+                <div className={styles.icons}>
+                  <button
+                    className={styles.button}
+                    onClick={handlePrint}
+                    disabled={!certificateReady}
+                  >
+                    <Image src="/certificate/print.svg" alt="Print" width={24} height={24} />
+                  </button>
+
+                  <button
+                    className={styles.button}
+                    onClick={handleDownloadPDF}
+                    disabled={!certificateReady}
+                  >
+                    <Image src="/certificate/download.svg" alt="Save" width={24} height={24} />
+                  </button>
+                </div>
+              </div>
+
+              <p className={styles.printInstruction}>
+                Be sure to print and save this certificate for school purposes.
+              </p>
             </div>
-          )}
+          </div>
         </div>
       </main>
     </ModuleGate>

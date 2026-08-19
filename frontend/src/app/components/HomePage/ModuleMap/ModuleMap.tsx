@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 
-import { get } from "../../../api/requests";
-import { useAuth } from "../../../contexts/AuthContext";
-import { showErrorToast } from "../../../utils/toastUtils";
+import { useLearningProgress } from "../../../contexts/LearningProgressContext";
 import AnimatedPath from "../AnimatedPath/AnimatedPath";
 import BackgroundPaths from "../BackgroundPaths/BackgroundPaths";
 import Bike from "../Bike/Bike";
@@ -22,32 +20,13 @@ export type UserData = {
   lastCompletedModule: ModuleNumbers;
 };
 
-// // Temporary user data with starting point
-const initialUserData: UserData = {
-  currentModule: 0,
-  lastCompletedModule: 0,
-};
-
 export default function ModuleMap() {
-  const { currentUser } = useAuth();
-  const [userData, setUserData] = useState<UserData>(initialUserData);
+  const { currentModule } = useLearningProgress();
+  const userData: UserData = {
+    currentModule: currentModule as ModuleNumbers,
+    lastCompletedModule: Math.max(0, currentModule - 1) as ModuleNumbers,
+  };
   const bikeIsAnimating = useRef(false);
-
-  useEffect(() => {
-    if (!currentUser) return;
-    const load = async () => {
-      try {
-        const res = await get(`/api/user/get/${encodeURIComponent(currentUser.email)}`);
-        const user = (await res.json()) as { module?: number };
-        const curMod = Math.max(0, Math.min(10, user.module ?? 0)) as ModuleNumbers;
-        const lastMod = Math.max(0, Math.min(9, (user.module ?? 0) - 1)) as ModuleNumbers;
-        setUserData({ currentModule: curMod, lastCompletedModule: lastMod });
-      } catch (err) {
-        showErrorToast("Error loading user data. Please try again.");
-      }
-    };
-    void load();
-  }, [currentUser]);
 
   return (
     <div className={styles.svg_container}>

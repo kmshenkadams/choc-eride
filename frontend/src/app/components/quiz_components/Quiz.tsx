@@ -4,10 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
-import { put } from "../../api/requests";
-import { useAuth } from "../../contexts/AuthContext";
-import { auth } from "../../firebase-config.js";
-import { showErrorToast } from "../../utils/toastUtils";
+import { useLearningProgress } from "../../contexts/LearningProgressContext";
 
 import { ExitNotif } from "./ExitNotif";
 import { Grade } from "./Grade";
@@ -86,7 +83,7 @@ export const Quiz = ({
   randomized = true,
 }: QuizProps) => {
   const router = useRouter();
-  const { currentUser, refreshUser } = useAuth();
+  const { advanceTo, currentModule } = useLearningProgress();
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string[]>>({});
   const [cancel, setCancel] = useState<boolean>(false);
   const [checkSubmit, setCheckSubmit] = useState<boolean>(false);
@@ -177,32 +174,12 @@ export const Quiz = ({
     setCheckSubmit(!checkSubmit);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     const calculatedScore = calculateQuizScore(randomizedQuestions, selectedAnswers);
 
-    // Update module immediately if score is >= 75
-    if (calculatedScore >= 75 && currentUser) {
-      try {
-        if (module < currentUser.module) {
-          // Quiz module is behind user's current progress - no update needed
-        } else if (module === currentUser.module) {
-          const nextModule = getNextModule(currentUser.module);
-          const token = await auth.currentUser?.getIdToken();
-          const headers: Record<string, string> | undefined = token
-            ? { Authorization: `Bearer ${token}` }
-            : undefined;
-          await put(`/api/user/update/${currentUser.email}`, { module: nextModule }, headers);
-
-          // Refresh the user data in the context
-          await refreshUser();
-        } else {
-          showErrorToast("Error: User is attempting a quiz ahead of their current progress");
-        }
-      } catch (error) {
-        showErrorToast();
-      }
+    if (calculatedScore >= 75 && module <= currentModule) {
+      advanceTo(getNextModule(module));
     }
-
     // Set UI state based on score
     if (calculatedScore < 75) {
       setLabel("Retake Quiz");
