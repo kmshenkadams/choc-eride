@@ -26,3 +26,11 @@ for (const route of removedAccountRoutes) {
     ).toHaveCount(0);
   });
 }
+
+test("/video/ returns the standard 404 page", async ({ page }) => {
+  const response = await page.goto("/video/");
+
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole("heading", { name: "This page could not be found." })).toBeVisible();
+  await expect(page.locator('iframe[src*="dQw4w9WgXcQ"]')).toHaveCount(0);
+});

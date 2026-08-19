@@ -1,4 +1,3 @@
-import { Analytics } from "@vercel/analytics/next";
 import localFont from "next/font/local";
 
 import { AppProviders } from "./contexts/AppProviders";
@@ -35,7 +34,6 @@ export default function RootLayout({
         <AppProviders>
           <ToastProvider />
           {children}
-          <Analytics />
         </AppProviders>
       </body>
     </html>
