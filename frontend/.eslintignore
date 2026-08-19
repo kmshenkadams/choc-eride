@@ -7,4 +7,3 @@ public/
 next-env.d.ts
 next.config.js
 vite.config.ts
-firebase-config.js

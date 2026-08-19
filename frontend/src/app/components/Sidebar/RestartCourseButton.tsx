@@ -33,8 +33,10 @@ export const RestartCourseButton: React.FC<Props> = ({
       onMouseLeave={onMouseLeave}
       {...props}
     >
-      {!isHovering && <Image src={Restart} width={24} height={20} alt="Logout Icon" />}
-      {isHovering && <Image src={"/restart_hover.svg"} width={24} height={20} alt="Logout Icon" />}
+      {!isHovering && <Image src={Restart} width={24} height={20} alt="Restart course icon" />}
+      {isHovering && (
+        <Image src={"/restart_hover.svg"} width={24} height={20} alt="Restart course icon" />
+      )}
       <p className={`${styles.text} ${isCollapsed ? styles.collapsed : ""}`}>Restart Course</p>
     </button>
   );
