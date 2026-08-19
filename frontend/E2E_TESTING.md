@@ -1,56 +1,88 @@
-# eBike browser test scripts
+# eRide anonymous browser tests
 
-These Playwright tests run against the stable Vercel preview and do not record video.
+The Playwright suite covers the anonymous learner journey, browser-local progress,
+Quiz 7 progression, and the removed legacy account routes. It does not require
+Firebase credentials, a test account, or saved authentication state.
 
-## One-time setup on Windows
+## One-time setup
 
-Open PowerShell:
+From PowerShell, install the frontend dependencies and Playwright Chromium:
 
 ```powershell
-cd C:\Users\kriss\GitHub\eRide
-git checkout deployment/vercel-baseline
-git pull origin deployment/vercel-baseline
-cd frontend
-Copy-Item .env.e2e.example .env.e2e
-notepad .env.e2e
+cd C:\Users\kriss\GitHub\eRide\frontend
 npm install
 npx playwright install chromium
 ```
 
-Put test-only email addresses and a test password in `.env.e2e`. Never commit that file.
+## Choose the application URL
 
-## 1. Create a new login
+Playwright reads `.env.e2e` and uses `E2E_BASE_URL` when it is set. The variable is
+optional; when it is absent, Playwright uses the default URL in
+`playwright.config.ts`.
 
-```powershell
-npm run test:e2e:create
-```
-
-The script always enters `Test` as the last name. After it passes, open the verification email and verify the account. Then set `E2E_TEST_EMAIL` in `.env.e2e` to that verified address.
-
-## 2. Login
+To keep a local target without committing it, copy the ignored example file and
+change only `E2E_BASE_URL`:
 
 ```powershell
-npm run test:e2e:login
+Copy-Item .env.e2e.example .env.e2e
 ```
 
-This signs in and saves the authenticated browser session locally for the next script.
-
-## 3. Authenticated happy path
+You can also set the URL for only the current PowerShell process. For example, to
+test a Vercel preview:
 
 ```powershell
-npm run test:e2e:happy
+$env:E2E_BASE_URL = "https://your-preview.vercel.app"
+npm run test:e2e
 ```
 
-This opens the authenticated course homepage, verifies the test account, sidebar, course map, and logout. It fails and logs evidence for JavaScript exceptions, console errors, failed requests, HTTP 4xx/5xx responses, and visible error/toast messages.
+To test a local production build, start it in one PowerShell window:
 
-## Results
+```powershell
+npm run build
+npm run start -- -p 3100
+```
 
-- Console: immediate pass/fail result
-- Failure screenshot and trace: `frontend/test-results`
-- HTML report:
+Then run the tests from a second PowerShell window:
+
+```powershell
+$env:E2E_BASE_URL = "http://127.0.0.1:3100"
+npm run test:e2e
+```
+
+## Run the tests
+
+Run all browser tests:
+
+```powershell
+npm run test:e2e
+```
+
+Run only the anonymous learner-flow tests:
+
+```powershell
+npx playwright test e2e/anonymous-learner-flow.spec.ts
+```
+
+Run the learning-progress and Quiz 7 regressions:
+
+```powershell
+npx playwright test e2e/learning-progress.spec.ts e2e/quiz7.spec.ts
+```
+
+Run the removed-account-route tests:
+
+```powershell
+npx playwright test e2e/removed-account-routes.spec.ts
+```
+
+## Results and reports
+
+Playwright prints the immediate pass or failure result in the console. Failure
+screenshots and traces are written to `frontend/test-results`. The HTML report is
+written to `frontend/playwright-report/index.html`.
+
+Open the HTML report viewer with:
 
 ```powershell
 npm run test:e2e:report
 ```
-
-The first phase intentionally excludes video playback and video recording.
