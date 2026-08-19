@@ -178,7 +178,9 @@ test.describe("connected anonymous learner journey", () => {
     await seedProgress(page, 10);
     const forbiddenRequests = monitorLearnerRequests(page);
     const requestBodies: string[] = [];
+    const requestUrls: string[] = [];
     page.on("request", (request) => {
+      requestUrls.push(request.url());
       const body = request.postData();
       if (body) requestBodies.push(body);
     });
@@ -200,12 +202,14 @@ test.describe("connected anonymous learner journey", () => {
     expect(storageValues.local.join(" ")).not.toContain(privateName);
     expect(storageValues.session.join(" ")).not.toContain(privateName);
     expect(JSON.stringify(cookies)).not.toContain(privateName);
+    expect(page.url()).not.toContain(privateName);
+    expect(requestUrls.join(" ")).not.toContain(privateName);
     expect(requestBodies.join(" ")).not.toContain(privateName);
     expect(forbiddenRequests).toEqual([]);
 
     await page.getByRole("button", { name: "Map" }).click();
     await expect(page).toHaveURL(/\/$/);
-    await page.goBack();
+    await page.goto("/certificate");
     await expect(page).toHaveURL(/\/certificate\/?$/);
     await expect(page.getByLabel("Name for your certificate")).toHaveValue("");
 
