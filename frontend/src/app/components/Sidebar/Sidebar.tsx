@@ -2,22 +2,15 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { put } from "../../api/requests";
-import { useAuth } from "../../contexts/AuthContext";
-import { auth } from "../../firebase-config.js";
-import { showErrorToast } from "../../utils/toastUtils";
+import { useLearningProgress } from "../../contexts/LearningProgressContext";
 
-import { Account } from "./Account";
-import { LogoutButton } from "./LogoutButton";
 import { MapButton } from "./MapButton";
 import { Modules } from "./Modules";
 import { ProgressBar } from "./ProgressBar";
 import { RestartCourseButton } from "./RestartCourseButton";
 import styles from "./Sidebar.module.css";
-
-import type { User } from "../../api/user";
 
 type SidebarProps = {
   isHomePage?: boolean;
@@ -27,64 +20,45 @@ type SidebarProps = {
 const SIDEBAR_STORAGE_KEY = "sidebar-collapsed-state";
 
 export default function Sidebar({ isHomePage = false, currentlyOn = null }: SidebarProps) {
-  const { currentUser } = useAuth();
-  const [user, setUser] = useState<User | null>(currentUser);
+  const { currentModule, restart } = useLearningProgress();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
-      const savedState = sessionStorage.getItem(SIDEBAR_STORAGE_KEY);
-      return savedState !== null ? (JSON.parse(savedState) as boolean) : false;
+      try {
+        const savedState = sessionStorage.getItem(SIDEBAR_STORAGE_KEY);
+        return savedState !== null ? (JSON.parse(savedState) as boolean) : false;
+      } catch {
+        return false;
+      }
     }
     return false;
   });
-  const [percent, setPercent] = useState<number>(0);
+  const percent = Math.round(Math.min(((currentModule - 1) / 9) * 100, 100));
+  const router = useRouter();
+
   const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-    sessionStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(!isCollapsed));
+    setIsCollapsed((current) => {
+      const next = !current;
+
+      try {
+        sessionStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // The sidebar remains usable when browser storage is unavailable.
+      }
+
+      return next;
+    });
   };
 
-  const Router = useRouter();
-
-  useEffect(() => {
-    if (user?.module) {
-      setPercent(Math.round(Math.min(((user.module - 1) / 9) * 100, 100)));
-    }
-  }, [user]);
-
-  useEffect(() => {
-    setUser(currentUser);
-  }, [currentUser]);
-
-  const handleLogout = async () => {
-    try {
-      await auth.signOut();
-      Router.push("/signin");
-    } catch (error) {
-      showErrorToast("Error signing out. Please try again.");
-    }
-  };
-
-  const handleRestartCourse = async () => {
+  const handleRestartCourse = () => {
     if (
       !window.confirm(
         "Are you sure you want to restart the course?\nYou will lose all your progress.",
       )
     )
       return;
-    try {
-      const token = await auth.currentUser?.getIdToken();
-      const headers: Record<string, string> | undefined = token
-        ? { Authorization: `Bearer ${token}` }
-        : undefined;
-      const email = currentUser?.email;
-      if (!email) {
-        showErrorToast("Error restarting course. Please try again.");
-        return;
-      }
-      await put(`/api/user/update/${email}`, { module: 1 }, headers);
-      window.location.reload();
-    } catch (error) {
-      showErrorToast("Error restarting course. Please try again.");
-    }
+
+    restart();
+    router.push("/intro-video");
   };
 
   return (
@@ -113,30 +87,18 @@ export default function Sidebar({ isHomePage = false, currentlyOn = null }: Side
       <MapButton
         isCollapsed={isCollapsed}
         handleClick={() => {
-          Router.push("/");
+          router.push("/");
         }}
         isHomePage={isHomePage}
       />
-      {user?.module === 10 && (
-        <RestartCourseButton
-          isCollapsed={isCollapsed}
-          handleClick={() => {
-            void handleRestartCourse();
-          }}
-        />
+      {currentModule === 10 && (
+        <RestartCourseButton isCollapsed={isCollapsed} handleClick={handleRestartCourse} />
       )}
       <Modules
-        currentModule={user?.module}
+        currentModule={currentModule}
         isCollapsed={isCollapsed}
-        earnedCert={user?.module === 10}
+        earnedCert={currentModule === 10}
         currentlyOn={currentlyOn}
-      />
-      {user && <Account user={user} isCollapsed={isCollapsed} />}
-      <LogoutButton
-        isCollapsed={isCollapsed}
-        handleClick={() => {
-          void handleLogout();
-        }}
       />
     </nav>
   );

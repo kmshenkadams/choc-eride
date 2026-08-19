@@ -1,10 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-import { get } from "../../api/requests";
-import { useAuth } from "../../contexts/AuthContext";
+import { useLearningProgress } from "../../contexts/LearningProgressContext";
 
 export default function ModuleGate({
   children,
@@ -13,39 +12,27 @@ export default function ModuleGate({
   children: React.ReactNode;
   module: number;
 }) {
-  const { currentUser, firebaseUser, loading } = useAuth();
+  const { currentModule, initialized, introSeen } = useLearningProgress();
+  const pathname = usePathname();
   const router = useRouter();
 
+  const isIntroRoute = pathname === "/intro-video" || pathname === "/intro-video/";
   useEffect(() => {
-    if (loading) return;
+    if (!initialized) return;
 
-    // If not logged in or verified, redirect
-    if (!firebaseUser || !firebaseUser.emailVerified || !currentUser) {
-      router.replace("/signin");
+    if (!introSeen && !isIntroRoute) {
+      router.replace("/intro-video");
       return;
     }
 
-    // Check if user has access to this module
-    void (async () => {
-      try {
-        const res = await get(`/api/user/get/${encodeURIComponent(currentUser.email)}`);
-        const user = (await res.json()) as { module?: number; firstLogin?: boolean };
+    if (module > currentModule) {
+      router.replace("/");
+    }
+  }, [currentModule, initialized, introSeen, isIntroRoute, module, router]);
 
-        if (user.firstLogin) {
-          router.replace("/intro-video");
-          return;
-        }
-
-        if (user.module === undefined || user.module < module) {
-          router.replace("/");
-        }
-      } catch (err) {
-        if (process.env.NODE_ENV !== "production") {
-          console.error("ModuleGate fetch error:", err);
-        }
-      }
-    })();
-  }, [currentUser, firebaseUser, loading, module, router]);
+  if (!initialized) return null;
+  if (!introSeen && !isIntroRoute) return null;
+  if (module > currentModule) return null;
 
   return <>{children}</>;
 }

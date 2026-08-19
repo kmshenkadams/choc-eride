@@ -15,9 +15,11 @@
 }
 
 .congratsStarsWrapper {
-  width: 780px;
-  height: 100%;
-  min-height: 750px;
+  width: min(780px, calc(100% - 4rem));
+  min-height: 100%;
+  padding: 2rem 0 3rem;
+  box-sizing: border-box;
+  flex-shrink: 0;
   margin-inline: auto;
   display: flex;
   flex-direction: column;
@@ -61,6 +63,45 @@
   top: 20px;
   right: -35px;
   position: absolute;
+}
+
+.nameEntry {
+  display: flex;
+  width: 100%;
+  max-width: 520px;
+  margin-top: 1.5rem;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nameLabel {
+  color: black;
+  font-family: "DM Sans";
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.nameInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #142850;
+  border-radius: 8px;
+  color: black;
+  background: white;
+  font-family: "DM Sans";
+  font-size: 18px;
+}
+
+.nameInput:focus {
+  outline: 3px solid #f7c948;
+  outline-offset: 2px;
+}
+
+.namePrivacy {
+  margin: 0;
+  color: #444;
+  font-family: "DM Sans";
+  font-size: 14px;
 }
 
 .row {
