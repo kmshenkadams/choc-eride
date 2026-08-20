@@ -9,12 +9,18 @@
 }
 
 .active:hover {
-  cursor: pointer;
   scale: 1.1;
 }
 
 .inactive {
   cursor: not-allowed;
+}
+
+.pathFocus,
+.focused {
+  filter: drop-shadow(0 0 0 4px #fff);
+  outline: 3px solid #fff;
+  outline-offset: 4px;
 }
 
 .module_error_toast {

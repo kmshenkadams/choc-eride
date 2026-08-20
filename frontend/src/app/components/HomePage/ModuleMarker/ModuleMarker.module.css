@@ -36,6 +36,16 @@
   cursor: not-allowed;
 }
 
+.focused,
+.active:focus-visible,
+.navigatable:focus-visible,
+.completed:focus-visible,
+.disabled:focus-visible {
+  filter: drop-shadow(0 0 0 4px #fff);
+  outline: 3px solid #fff;
+  outline-offset: 4px;
+}
+
 .marker_text {
   font-family: "Rammetto One";
   font-size: 24px;

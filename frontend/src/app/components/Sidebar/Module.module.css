@@ -8,6 +8,15 @@
   justify-content: center;
   transition: gap 0.3s ease-in-out;
   cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.module:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 4px;
 }
 
 .pointer {
@@ -198,8 +207,9 @@
   transition: opacity 0.225s ease-in-out; /* Smooth transition */
 }
 
-.hover:hover::before {
-  opacity: 1; /* Make it visible on hover */
+.hover:hover::before,
+.hover:focus-visible::before {
+  opacity: 1; /* Make it visible on hover and focus */
 }
 
 .linehover {
@@ -220,6 +230,7 @@
   transition: opacity 0.225s ease-in-out; /* Smooth transition */
 }
 
-.linehover:hover::before {
+.linehover:hover::before,
+.linehover:focus-within::before {
   opacity: 1; /* Make it visible on hover */
 }

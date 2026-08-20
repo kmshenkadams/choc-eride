@@ -1,20 +1,24 @@
 "use client";
 import { useRouter } from "next/navigation";
 
+import { showErrorToast } from "../../utils/toastUtils";
+
 import { Module } from "./Module";
 import styles from "./Modules.module.css";
+
+type Props = {
+  isCollapsed?: boolean;
+  currentModule?: number;
+  earnedCert?: boolean;
+  currentlyOn?: number | null;
+};
 
 export const Modules = ({
   isCollapsed = false,
   currentModule = 1,
   earnedCert = false,
   currentlyOn = null,
-}: {
-  isCollapsed?: boolean;
-  currentModule?: number;
-  earnedCert?: boolean;
-  currentlyOn?: number | null;
-}) => {
+}: Props) => {
   const router = useRouter();
 
   let buttonClass = styles.moduleContainer;
@@ -23,10 +27,12 @@ export const Modules = ({
   }
 
   const handleClick = (moduleNumber: number) => {
-    // only use currentModule
     if (moduleNumber > currentModule) {
+      showErrorToast("This module is locked!");
       return;
-    } else if (moduleNumber === 9) {
+    }
+
+    if (moduleNumber === 9) {
       router.push(earnedCert ? "/certificate" : "/final-test");
     } else {
       router.push(`/module${moduleNumber}`);
@@ -54,6 +60,7 @@ export const Modules = ({
         {moduleData.map((module) => {
           // Determine module kind based on its number compared to currentModule
           let kind: "primary" | "inactive" | "complete" = "inactive";
+          const isLocked = module.number > currentModule;
           if (module.number < currentModule) {
             kind = "complete";
           } else if (module.number === currentModule) {
@@ -71,6 +78,7 @@ export const Modules = ({
                 handleClick(module.number);
               }}
               kind={kind}
+              isLocked={isLocked}
               highlighted={currentlyOn !== null && currentlyOn === module.number}
               addLine={module.addLine !== false}
             />
