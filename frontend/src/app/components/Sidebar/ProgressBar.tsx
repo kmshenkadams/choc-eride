@@ -7,14 +7,19 @@ type Props = {
   isCollapsed?: boolean;
 };
 
+const currentModuleEstimate = (completionPercent: number): number => {
+  return Math.max(0, Math.round((completionPercent / 100) * 9));
+};
+
 export const ProgressBar = ({ percentage, isCollapsed = false }: Props) => {
   const size = 187;
   const strokeWidth = 18.5;
   const radius = (size - strokeWidth) / 2;
   const circumference = Math.PI * radius;
+  const completed = Math.max(0, Math.min(100, Math.round(percentage)));
 
   const animatedPercentage = useSpring({
-    val: percentage,
+    val: completed,
     from: { val: 0 },
     config: { tension: 30, friction: 12 },
   });
@@ -32,14 +37,30 @@ export const ProgressBar = ({ percentage, isCollapsed = false }: Props) => {
     return 16 + ((val - 16) * 84) / 84;
   });
 
+  const progressLabel = `Course completion: ${completed}% complete`;
+
   return (
-    <div className={styles.container}>
+    <div
+      className={styles.container}
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={completed}
+      aria-label={progressLabel}
+      aria-describedby="eride-progress-description"
+      aria-live="polite"
+    >
+      <span id="eride-progress-description" className={styles.srOnly}>
+        {`You have completed ${Math.max(0, Math.min(9, currentModuleEstimate(completed)))} of 9
+        learning modules.`}
+      </span>
       {!isCollapsed && (
         <svg
           width={size}
           height={size / 2}
           viewBox={`0 0 ${size} ${size / 2}`}
           className={styles.svg}
+          aria-hidden="true"
         >
           {/* Background half-circle */}
           <path

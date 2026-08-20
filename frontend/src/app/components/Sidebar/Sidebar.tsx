@@ -66,6 +66,8 @@ export default function Sidebar({ isHomePage = false, currentlyOn = null }: Side
       <button
         className={`${styles.collapseButton} ${isCollapsed ? styles.open : ""}`}
         onClick={toggleSidebar}
+        aria-expanded={!isCollapsed}
+        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {isCollapsed ? (
           <Image

@@ -9,6 +9,7 @@ type Props = {
   moduleNumber: number;
   addLine?: boolean;
   handleClick: () => void;
+  isLocked?: boolean;
 };
 
 export const Module = ({
@@ -20,6 +21,7 @@ export const Module = ({
   moduleNumber,
   addLine = true,
   handleClick,
+  isLocked = false,
 }: Props) => {
   let moduleTitleText = styles.moduleTitleText;
   let moduleTimeText = styles.moduleTimeText;
@@ -27,6 +29,8 @@ export const Module = ({
   let moduleNumberBoarder = styles.moduleNumber;
   let modules = styles.module;
   let color = "#BBD567";
+  const status = isLocked ? "locked" : kind === "complete" ? "completed" : "current";
+
   switch (kind) {
     case "primary":
       if (!highlighted && addLine) {
@@ -75,8 +79,17 @@ export const Module = ({
     modules += ` ${styles.collapsed}`;
   }
 
+  const accessibleName = `${moduleName} module ${moduleNumber}, ${status}`;
+
   return (
-    <div className={modules} onClick={handleClick}>
+    <button
+      className={modules}
+      type="button"
+      aria-disabled={isLocked || undefined}
+      aria-label={accessibleName}
+      aria-current={kind === "primary" ? "page" : undefined}
+      onClick={handleClick}
+    >
       <div className={styles.column}>
         <div className={moduleNumberBoarder}>
           <p className={moduleNumberText}>{moduleNumber}</p>
@@ -97,6 +110,6 @@ export const Module = ({
         <p className={moduleTitleText}>{moduleName}</p>
         <p className={moduleTimeText}>{moduleTime + " min"}</p>
       </div>
-    </div>
+    </button>
   );
 };
